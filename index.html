@@ -93,7 +93,9 @@
       transition: opacity 0.45s ease, transform 0.45s ease;
       pointer-events: none;
       position: absolute;
-      inset: 0 16px auto;
+      width: 100%;
+      left: 0; top: 0;
+      padding: 0 16px;
     }
 
     .page.active {
@@ -142,14 +144,6 @@
 
     .loading-text { margin-top: 16px; font-size: 0.95rem; color: var(--gray); font-weight: 500; }
 
-    .info-box {
-      background: color-mix(in srgb, var(--primary) 8%, var(--card));
-      border-radius: 16px;
-      padding: 18px;
-      margin: 20px 0;
-      border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
-    }
-
     .rgb-text {
       font-size: 1.15rem;
       font-weight: 700;
@@ -168,6 +162,14 @@
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
+    }
+
+    .info-box {
+      background: color-mix(in srgb, var(--primary) 8%, var(--card));
+      border-radius: 16px;
+      padding: 18px;
+      margin: 20px 0;
+      border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
     }
 
     label { font-weight: 600; color: var(--primary-dark); display: block; margin-bottom: 8px; font-size: 0.95rem; }
@@ -325,14 +327,14 @@
           Use this USDT in trading and Gaming only
         </div>
 
-        <div class="info-box" style="text-align:center; margin: 24px 0;">
+        <div class="info-box" style="text-align:center; margin: 32px 0;">
           <strong>Current rate:</strong> 1 USDT = 0.1 TRX<br>
           <small>(demo rate – real market may differ)</small>
         </div>
 
-        <h3 style="margin: 32px 0 16px; text-align:center; color: var(--primary);">Recent Completed Transactions</h3>
-
-        <div id="homeCompletedList" class="history-list"></div>
+        <p style="text-align:center; color:var(--gray); margin-top:24px;">
+          Buy USDT instantly and use it in trading & gaming platforms.
+        </p>
       </div>
     </div>
 
@@ -369,7 +371,7 @@
           </div>
           <div id="expired-msg">Payment window has expired. Please start again.</div>
 
-          <div class="copy-group" id="paymentInfo">
+          <div class="copy-group">
             <span id="addressDisplay"></span>
             <button class="copy-btn" onclick="copyToClipboard('addressDisplay')">Copy</button>
           </div>
@@ -386,8 +388,36 @@
       </div>
     </div>
 
-    <!-- History & Wallet pages remain the same as before -->
-    <!-- ... (omitted for brevity - copy from previous version if needed) ... -->
+    <!-- History -->
+    <div id="page-history" class="page">
+      <div class="card">
+        <div class="loading-overlay" id="historyLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Loading transactions…</div>
+        </div>
+
+        <h2>Transaction History</h2>
+        <div id="historyList" class="history-list"></div>
+        <p id="historyInfo" style="text-align:center; margin-top:28px; color:var(--gray); font-size:0.95rem;">
+          Loading…
+        </p>
+      </div>
+    </div>
+
+    <!-- Wallet -->
+    <div id="page-wallet" class="page">
+      <div class="card">
+        <h2>Your Wallet</h2>
+        <p style="text-align:center; margin:48px 0; color:var(--gray); line-height:1.6;">
+          No wallet connected yet<br>
+          Balance: <strong>0 TRX</strong> / <strong>0 USDT</strong>
+        </p>
+        <button class="btn">Connect TRON Wallet</button>
+        <p style="text-align:center; margin-top:24px; font-size:0.9rem; color:var(--gray);">
+          (Feature coming soon)
+        </p>
+      </div>
+    </div>
 
   </div>
 
@@ -402,13 +432,10 @@
 
   <script>
     // ─── Theme Toggle ──────────────────────────────────────
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-
-    themeToggle.addEventListener('click', () => {
-      const current = body.dataset.theme;
-      body.dataset.theme = current === 'dark' ? 'light' : 'dark';
-      themeToggle.innerHTML = `<i class="fa-solid fa-${current === 'dark' ? 'sun' : 'moon'}"></i>`;
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const current = document.body.dataset.theme;
+      document.body.dataset.theme = current === 'dark' ? 'light' : 'dark';
+      document.getElementById('themeToggle').innerHTML = `<i class="fa-solid fa-${current === 'dark' ? 'sun' : 'moon'}"></i>`;
     });
 
     // ─── Copy helpers ──────────────────────────────────────
@@ -432,56 +459,145 @@
 
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(`page-${item.dataset.page}`).classList.add('active');
+
+        if (item.dataset.page === 'history') {
+          loadHistory();
+        }
       });
     });
 
-    // ─── Home - Show only Completed Transactions ───────────
-    function renderHomeCompleted() {
-      const container = document.getElementById('homeCompletedList');
-      if (!container) return;
+    // ─── History (only here, max 10 transactions) ──────────
+    function loadHistory() {
+      const loading = document.getElementById('historyLoading');
+      const list = document.getElementById('historyList');
+      const info = document.getElementById('historyInfo');
 
-      const txs = generateFakeTransactions(5); // generate some fake txs
-      const completed = txs.filter(tx => tx.status === 'Completed');
+      loading.classList.add('active');
+      list.innerHTML = '';
+      info.textContent = 'Updating…';
 
-      if (completed.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--gray);">No recent completed transactions</p>';
-        return;
-      }
+      setTimeout(() => {
+        const txs = generateFakeTransactions(10);
+        renderHistory(txs);
+        loading.classList.remove('active');
+      }, 1400);
+    }
 
-      container.innerHTML = completed.map(tx => `
-        <div class="history-item completed">
+    function generateFakeTransactions(count) {
+      const now = Date.now();
+      const amounts = [600,900,1000,1200,1500,1800,2200,2800,3500,4200,5000];
+      const statuses = ['Completed','Completed','Completed','Pending','Failed'];
+
+      return Array.from({length: count}, () => {
+        const minutesAgo = Math.random() * 60*24*5 + 30; // up to ~5 days
+        const date = new Date(now - minutesAgo*60000);
+        const usdt = amounts[Math.floor(Math.random()*amounts.length)];
+        return {
+          date: date.toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}),
+          usdt,
+          trx: (usdt * 0.1 + Math.random()*10 + 4).toFixed(1),
+          status: statuses[Math.floor(Math.random()*statuses.length)],
+          txid: 'T' + Math.random().toString(36).slice(2,15).toUpperCase()
+        };
+      }).sort((a,b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function renderHistory(txs) {
+      const container = document.getElementById('historyList');
+      container.innerHTML = txs.map(tx => `
+        <div class="history-item ${tx.status.toLowerCase()}">
           <div class="history-header">
             <span class="history-amount">+${tx.usdt} USDT</span>
-            <span class="history-status completed">Completed</span>
+            <span class="history-status ${tx.status.toLowerCase()}">${tx.status}</span>
           </div>
           <div class="history-date">${tx.date}</div>
           <div style="margin-top:6px;">Paid: ${tx.trx} TRX</div>
         </div>
       `).join('');
+
+      document.getElementById('historyInfo').textContent = `Showing up to 10 recent transactions • Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
     }
 
-    // Simple fake transaction generator (you can expand this)
-    function generateFakeTransactions(count) {
-      const now = Date.now();
-      const amounts = [800, 1200, 1500, 2200, 3000, 4500];
-      return Array.from({length: count}, () => {
-        const minutesAgo = Math.random() * 4320; // up to 3 days
-        const date = new Date(now - minutesAgo * 60000);
-        const usdt = amounts[Math.floor(Math.random() * amounts.length)];
-        return {
-          date: date.toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}),
-          usdt,
-          trx: (usdt * 0.1 + Math.random() * 8 + 4).toFixed(1),
-          status: ['Completed', 'Completed', 'Pending', 'Failed'][Math.floor(Math.random() * 4)]
-        };
-      });
-    }
+    // ─── Buy Logic (unchanged) ─────────────────────────────
+    let countdownTimer;
 
-    // Load completed transactions on home page when shown
-    document.querySelector('[data-page="home"]').addEventListener('click', renderHomeCompleted);
+    document.getElementById('buyForm').addEventListener('submit', e => {
+      e.preventDefault();
+      document.getElementById('buyLoading').classList.add('active');
 
-    // Initial load
-    renderHomeCompleted();
+      setTimeout(() => {
+        document.getElementById('buyLoading').classList.remove('active');
+
+        const amount = Number(document.getElementById('amount').value);
+        if (amount < 1000 || isNaN(amount)) {
+          alert("Minimum amount is 1000 USDT");
+          return;
+        }
+
+        const trx = (amount * 0.1 + 5).toFixed(1);
+        document.getElementById('trxAmount').textContent = trx;
+        document.getElementById('addressDisplay').textContent = "THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC";
+
+        document.getElementById('qrcode').innerHTML = '';
+        new QRCode(document.getElementById('qrcode'), {
+          text: `tron:THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC?amount=${trx}`,
+          width: 240,
+          height: 240,
+          colorDark: "#1d4ed8",
+          colorLight: "#ffffff"
+        });
+
+        document.getElementById('qr-container').style.display = 'block';
+        document.getElementById('calculateBtn').disabled = true;
+        document.getElementById('calculateBtn').textContent = "Edit Amount";
+
+        let timeLeft = 15 * 60;
+        document.getElementById('countdown').textContent = "15:00";
+        document.getElementById('expired-msg').style.display = 'none';
+
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          timeLeft--;
+          const m = Math.floor(timeLeft / 60).toString().padStart(2,'0');
+          const s = (timeLeft % 60).toString().padStart(2,'0');
+          document.getElementById('countdown').textContent = `${m}:${s}`;
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            document.getElementById('expired-msg').style.display = 'block';
+            document.getElementById('qr-container').style.display = 'none';
+            document.getElementById('calculateBtn').disabled = false;
+            document.getElementById('calculateBtn').textContent = "Calculate & Proceed";
+          }
+        }, 1000);
+      }, 1400);
+    });
+
+    document.getElementById('payBtn').addEventListener('click', () => {
+      clearInterval(countdownTimer);
+      document.getElementById('status').innerHTML = `
+        <div style="padding:28px; background:#ecfdf5; border-radius:16px; text-align:center;">
+          <div class="spinner" style="margin:0 auto 20px; width:48px; height:48px; border-width:5px;"></div>
+          <strong style="font-size:1.3rem;">Processing payment…</strong>
+        </div>
+      `;
+      document.getElementById('status').style.display = 'block';
+      document.getElementById('payBtn').disabled = true;
+      document.getElementById('payBtn').textContent = "Confirming…";
+
+      setTimeout(() => {
+        document.getElementById('status').innerHTML = `
+          <div style="padding:28px; background:#ecfdf5; border-radius:16px; text-align:center; color:var(--success);">
+            <i class="fa-solid fa-check-circle" style="font-size:3.2rem; margin-bottom:16px;"></i>
+            <strong style="font-size:1.4rem;">Success!</strong>
+            <div style="margin-top:12px;">${document.getElementById('amount').value} USDT sent</div>
+          </div>
+        `;
+      }, 2800);
+    });
+
+    // Initial load for history (optional - can be triggered only on tab click)
+    // loadHistory();
   </script>
 </body>
 </html>
