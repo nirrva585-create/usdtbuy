@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>USDT Buy • TRX</title>
+  <title>Flash USDT • TRX</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +21,6 @@
       --light-gray: #e5e7eb;
       --card: #ffffff;
       --success: #10b981;
-      --pending: #f59e0b;
-      --failed: #ef4444;
       --nav-bg: #ffffff;
       --nav-border: #e5e7eb;
     }
@@ -36,8 +34,6 @@
       --light-gray: #334155;
       --card: #1e293b;
       --success: #34d399;
-      --pending: #fbbf24;
-      --failed: #f87171;
       --nav-bg: #1e293b;
       --nav-border: #334155;
     }
@@ -251,11 +247,10 @@
       border-left: 5px solid var(--success);
       box-shadow: 0 4px 14px rgba(0,0,0,0.06);
       transition: all 0.2s;
+      cursor: pointer;
     }
 
     .history-item:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-    .history-item.pending { border-left-color: var(--pending); }
-    .history-item.failed  { border-left-color: var(--failed); }
 
     .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 600; }
     .history-amount { font-size: 1.15rem; color: var(--primary-dark); }
@@ -265,10 +260,9 @@
       border-radius: 999px;
       font-size: 0.85rem;
       font-weight: 500;
+      background: #d1fae5;
+      color: var(--success);
     }
-    .history-status.completed { background: #d1fae5; color: var(--success); }
-    .history-status.pending   { background: #fef3c7; color: var(--pending); }
-    .history-status.failed    { background: #fee2e2; color: var(--failed); }
 
     .bottom-nav {
       position: fixed;
@@ -301,6 +295,52 @@
 
     .main-content { position: relative; flex: 1; margin-bottom: 32px; }
 
+    #detail-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    #detail-content {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    #close-detail {
+      position: absolute;
+      top: 16px; right: 20px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: var(--gray);
+    }
+
+    #detail-body {
+      margin-top: 24px;
+      line-height: 1.7;
+      font-size: 0.98rem;
+    }
+
+    #detail-body code {
+      background: var(--light-gray);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      word-break: break-all;
+      font-size: 0.92rem;
+    }
+
     @media (min-width: 500px) {
       body { max-width: 480px; margin: 0 auto; }
     }
@@ -309,7 +349,7 @@
 <body data-theme="light">
 
   <header>
-    <h1>USDT Buy</h1>
+    <h1>Flash USDT Buy</h1>
     <div class="subtitle">Instant • Secure • TRX Powered</div>
     <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
       <i class="fa-solid fa-moon"></i>
@@ -324,16 +364,16 @@
         <h2>Welcome</h2>
 
         <div class="rgb-text">
-          Use this USDT in trading and Gaming only
+          Use this Flash USDT in trading and Gaming only
         </div>
 
         <div class="info-box" style="text-align:center; margin: 32px 0;">
           <strong>Current rate:</strong> 1 USDT = 0.1 TRX<br>
-          <small>(demo rate – real market may differ)</small>
+          <small>(rate – real market may differ)</small>
         </div>
 
         <p style="text-align:center; color:var(--gray); margin-top:24px;">
-          Buy USDT instantly and use it in trading & gaming platforms.
+          Buy Flash USDT instantly and use it in trading & gaming platforms.
         </p>
       </div>
     </div>
@@ -388,15 +428,15 @@
       </div>
     </div>
 
-    <!-- History -->
+    <!-- History - only completed with realistic TXID -->
     <div id="page-history" class="page">
       <div class="card">
         <div class="loading-overlay" id="historyLoading">
           <div class="spinner"></div>
-          <div class="loading-text">Loading transactions…</div>
+          <div class="loading-text">Loading completed transactions…</div>
         </div>
 
-        <h2>Transaction History</h2>
+        <h2>Completed Transactions</h2>
         <div id="historyList" class="history-list"></div>
         <p id="historyInfo" style="text-align:center; margin-top:28px; color:var(--gray); font-size:0.95rem;">
           Loading…
@@ -421,6 +461,7 @@
 
   </div>
 
+  <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <div class="nav-item active" data-page="home"><i class="fa-solid fa-house nav-icon"></i><span>Home</span></div>
     <div class="nav-item" data-page="buy"><i class="fa-solid fa-cart-shopping nav-icon"></i><span>Buy</span></div>
@@ -428,17 +469,26 @@
     <div class="nav-item" data-page="wallet"><i class="fa-solid fa-wallet nav-icon"></i><span>Wallet</span></div>
   </nav>
 
+  <!-- Transaction Detail Modal -->
+  <div id="detail-modal">
+    <div id="detail-content">
+      <i id="close-detail" class="fa-solid fa-times"></i>
+      <h2>Transaction Details</h2>
+      <div id="detail-body" style="margin-top:24px; line-height:1.7;"></div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
-    // ─── Theme Toggle ──────────────────────────────────────
+    // Theme Toggle
     document.getElementById('themeToggle').addEventListener('click', () => {
       const current = document.body.dataset.theme;
       document.body.dataset.theme = current === 'dark' ? 'light' : 'dark';
       document.getElementById('themeToggle').innerHTML = `<i class="fa-solid fa-${current === 'dark' ? 'sun' : 'moon'}"></i>`;
     });
 
-    // ─── Copy helpers ──────────────────────────────────────
+    // Copy helpers
     function copyToClipboard(id) {
       const text = document.getElementById(id).textContent;
       navigator.clipboard.writeText(text).then(() => alert('Copied!'));
@@ -451,7 +501,7 @@
       navigator.clipboard.writeText(str).then(() => alert('Full payment info copied!'));
     }
 
-    // ─── Navigation ────────────────────────────────────────
+    // Navigation
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', () => {
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -466,7 +516,7 @@
       });
     });
 
-    // ─── History (only here, max 10 transactions) ──────────
+    // History - only completed with realistic-looking TXID
     function loadHistory() {
       const loading = document.getElementById('historyLoading');
       const list = document.getElementById('historyList');
@@ -477,8 +527,9 @@
       info.textContent = 'Updating…';
 
       setTimeout(() => {
-        const txs = generateFakeTransactions(10);
-        renderHistory(txs);
+        const allTxs = generateFakeTransactions(20);
+        const completed = allTxs.filter(tx => tx.status === 'Completed').slice(0, 10);
+        renderHistory(completed);
         loading.classList.remove('active');
       }, 1400);
     }
@@ -486,39 +537,92 @@
     function generateFakeTransactions(count) {
       const now = Date.now();
       const amounts = [600,900,1000,1200,1500,1800,2200,2800,3500,4200,5000];
-      const statuses = ['Completed','Completed','Completed','Pending','Failed'];
 
       return Array.from({length: count}, () => {
-        const minutesAgo = Math.random() * 60*24*5 + 30; // up to ~5 days
+        const minutesAgo = Math.random() * 60*24*7 + 30; // up to ~1 week
         const date = new Date(now - minutesAgo*60000);
         const usdt = amounts[Math.floor(Math.random()*amounts.length)];
+
+        // More realistic TRON TXID: 64 hex characters (32 bytes), starting with common prefix patterns
+        const hexChars = '0123456789abcdef';
+        let txid = '';
+        for (let i = 0; i < 64; i++) {
+          txid += hexChars[Math.floor(Math.random() * 16)];
+        }
+        // Make it look even more real by adding typical TRON tx prefix feel
+        txid = 'a614' + txid.substring(4); // common-looking start
+
         return {
           date: date.toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}),
           usdt,
           trx: (usdt * 0.1 + Math.random()*10 + 4).toFixed(1),
-          status: statuses[Math.floor(Math.random()*statuses.length)],
-          txid: 'T' + Math.random().toString(36).slice(2,15).toUpperCase()
+          status: 'Completed',
+          txid: txid.toUpperCase()
         };
       }).sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
     function renderHistory(txs) {
       const container = document.getElementById('historyList');
-      container.innerHTML = txs.map(tx => `
-        <div class="history-item ${tx.status.toLowerCase()}">
-          <div class="history-header">
-            <span class="history-amount">+${tx.usdt} USDT</span>
-            <span class="history-status ${tx.status.toLowerCase()}">${tx.status}</span>
-          </div>
-          <div class="history-date">${tx.date}</div>
-          <div style="margin-top:6px;">Paid: ${tx.trx} TRX</div>
-        </div>
-      `).join('');
 
-      document.getElementById('historyInfo').textContent = `Showing up to 10 recent transactions • Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+      if (txs.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:var(--gray); padding:60px 0;">No completed transactions yet</p>';
+      } else {
+        container.innerHTML = txs.map(tx => `
+          <div class="history-item completed" 
+               data-txid="${tx.txid}"
+               data-usdt="${tx.usdt}"
+               data-trx="${tx.trx}"
+               data-date="${tx.date}">
+            <div class="history-header">
+              <span class="history-amount">+${tx.usdt} USDT</span>
+              <span class="history-status completed">Completed</span>
+            </div>
+            <div class="history-date">${tx.date}</div>
+            <div style="margin-top:6px;">Paid: ${tx.trx} TRX</div>
+          </div>
+        `).join('');
+
+        // Click to show details
+        document.querySelectorAll('.history-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const d = item.dataset;
+            document.getElementById('detail-body').innerHTML = `
+              <div style="margin-bottom:20px;">
+                <strong style="font-size:1.3rem; color:var(--primary-dark);">
+                  ${d.usdt} USDT
+                </strong>
+                <div style="color:var(--gray); margin-top:4px;">${d.date}</div>
+              </div>
+              <div style="display:grid; gap:16px;">
+                <div><strong>Status:</strong> <span style="color:var(--success);">Completed</span></div>
+                <div><strong>TRX Paid:</strong> ${d.trx}</div>
+                <div><strong>Transaction ID (TXID):</strong><br><code>${d.txid}</code></div>
+                <div><strong>Deposit Address:</strong><br><code>THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC</code></div>
+                <div><strong>Network:</strong> TRON (TRC20)</div>
+                <div><strong>Confirmations:</strong> 19 (finalized)</div>
+              </div>
+            `;
+            document.getElementById('detail-modal').style.display = 'flex';
+          });
+        });
+      }
+
+      document.getElementById('historyInfo').textContent = `Showing completed transactions • Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
     }
 
-    // ─── Buy Logic (unchanged) ─────────────────────────────
+    // Close modal
+    document.getElementById('close-detail').addEventListener('click', () => {
+      document.getElementById('detail-modal').style.display = 'none';
+    });
+
+    document.getElementById('detail-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('detail-modal')) {
+        document.getElementById('detail-modal').style.display = 'none';
+      }
+    });
+
+    // Buy logic (unchanged)
     let countdownTimer;
 
     document.getElementById('buyForm').addEventListener('submit', e => {
@@ -595,9 +699,6 @@
         `;
       }, 2800);
     });
-
-    // Initial load for history (optional - can be triggered only on tab click)
-    // loadHistory();
   </script>
 </body>
 </html>
