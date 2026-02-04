@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Flash USDT • TRX</title>
+  <title>Flash USDT Buy • TRX</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -210,7 +210,7 @@
     }
 
     #timer { font-weight: 600; color: var(--primary-dark); margin: 16px 0; font-size: 1.1rem; }
-    #expired-msg { color: var(--failed); font-weight: 600; margin: 20px 0; display: none; }
+    #expired-msg { color: #ef4444; font-weight: 600; margin: 20px 0; display: none; }
 
     .copy-group {
       display: flex;
@@ -369,7 +369,7 @@
 
         <div class="info-box" style="text-align:center; margin: 32px 0;">
           <strong>Current rate:</strong> 1 USDT = 0.1 TRX<br>
-          <small>(rate – real market may differ)</small>
+          <small>(real market may differ)</small>
         </div>
 
         <p style="text-align:center; color:var(--gray); margin-top:24px;">
@@ -428,7 +428,7 @@
       </div>
     </div>
 
-    <!-- History - only completed with realistic TXID -->
+    <!-- History -->
     <div id="page-history" class="page">
       <div class="card">
         <div class="loading-overlay" id="historyLoading">
@@ -461,7 +461,6 @@
 
   </div>
 
-  <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <div class="nav-item active" data-page="home"><i class="fa-solid fa-house nav-icon"></i><span>Home</span></div>
     <div class="nav-item" data-page="buy"><i class="fa-solid fa-cart-shopping nav-icon"></i><span>Buy</span></div>
@@ -516,7 +515,7 @@
       });
     });
 
-    // History - only completed with realistic-looking TXID
+    // History - only completed
     function loadHistory() {
       const loading = document.getElementById('historyLoading');
       const list = document.getElementById('historyList');
@@ -539,18 +538,17 @@
       const amounts = [600,900,1000,1200,1500,1800,2200,2800,3500,4200,5000];
 
       return Array.from({length: count}, () => {
-        const minutesAgo = Math.random() * 60*24*7 + 30; // up to ~1 week
+        const minutesAgo = Math.random() * 60*24*7 + 30;
         const date = new Date(now - minutesAgo*60000);
         const usdt = amounts[Math.floor(Math.random()*amounts.length)];
 
-        // More realistic TRON TXID: 64 hex characters (32 bytes), starting with common prefix patterns
-        const hexChars = '0123456789abcdef';
+        // Realistic 64-character hex TXID
+        const hex = '0123456789abcdef';
         let txid = '';
         for (let i = 0; i < 64; i++) {
-          txid += hexChars[Math.floor(Math.random() * 16)];
+          txid += hex[Math.floor(Math.random() * 16)];
         }
-        // Make it look even more real by adding typical TRON tx prefix feel
-        txid = 'a614' + txid.substring(4); // common-looking start
+        txid = 'a614' + txid.substring(4); // typical-looking prefix
 
         return {
           date: date.toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}),
@@ -583,7 +581,6 @@
           </div>
         `).join('');
 
-        // Click to show details
         document.querySelectorAll('.history-item').forEach(item => {
           item.addEventListener('click', () => {
             const d = item.dataset;
@@ -597,8 +594,7 @@
               <div style="display:grid; gap:16px;">
                 <div><strong>Status:</strong> <span style="color:var(--success);">Completed</span></div>
                 <div><strong>TRX Paid:</strong> ${d.trx}</div>
-                <div><strong>Transaction ID (TXID):</strong><br><code>${d.txid}</code></div>
-                <div><strong>Deposit Address:</strong><br><code>TCA5FoJHueBeDr2eHZbXfrJdko7E7Mmhgc</code></div>
+                <div><strong>TXN / TXID:</strong><br><code>${d.txid}</code></div>
                 <div><strong>Network:</strong> TRON (TRC20)</div>
                 <div><strong>Confirmations:</strong> 19 (finalized)</div>
               </div>
