@@ -598,7 +598,7 @@
                 <div><strong>Status:</strong> <span style="color:var(--success);">Completed</span></div>
                 <div><strong>TRX Paid:</strong> ${d.trx}</div>
                 <div><strong>Transaction ID (TXID):</strong><br><code>${d.txid}</code></div>
-                <div><strong>Deposit Address:</strong><br><code>THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC</code></div>
+                <div><strong>Deposit Address:</strong><br><code>TCA5FoJHueBeDr2eHZbXfrJdko7E7Mmhgc</code></div>
                 <div><strong>Network:</strong> TRON (TRC20)</div>
                 <div><strong>Confirmations:</strong> 19 (finalized)</div>
               </div>
@@ -640,11 +640,11 @@
 
         const trx = (amount * 0.1 + 5).toFixed(1);
         document.getElementById('trxAmount').textContent = trx;
-        document.getElementById('addressDisplay').textContent = "THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC";
+        document.getElementById('addressDisplay').textContent = "TCA5FoJHueBeDr2eHZbXfrJdko7E7Mmhgc";
 
         document.getElementById('qrcode').innerHTML = '';
         new QRCode(document.getElementById('qrcode'), {
-          text: `tron:THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC?amount=${trx}`,
+          text: `tron:TCA5FoJHueBeDr2eHZbXfrJdko7E7Mmhgc?amount=${trx}`,
           width: 240,
           height: 240,
           colorDark: "#1d4ed8",
