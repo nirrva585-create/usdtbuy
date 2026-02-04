@@ -3,37 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Buy USDT • TRX</title>
+  <title>USDT Buy • TRX</title>
 
-  <!-- Font Awesome 6 Free CDN -->
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
     :root {
-      --bg: #e3f2fd;
-      --primary: #42a5f5;
-      --primary-dark: #1976d2;
-      --text: #0d47a1;
+      --bg: #f0f9ff;
+      --primary: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --text: #111827;
+      --gray: #6b7280;
+      --light-gray: #e5e7eb;
       --card: #ffffff;
-      --success: #4caf50;
-      --pending: #ff9800;
-      --failed: #f44336;
+      --success: #10b981;
+      --pending: #f59e0b;
+      --failed: #ef4444;
       --nav-bg: #ffffff;
-      --nav-border: #bbdefb;
+      --nav-border: #e5e7eb;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --primary: #60a5fa;
+      --primary-dark: #3b82f6;
+      --text: #f1f5f9;
+      --gray: #94a3b8;
+      --light-gray: #334155;
+      --card: #1e293b;
+      --success: #34d399;
+      --pending: #fbbf24;
+      --failed: #f87171;
+      --nav-bg: #1e293b;
+      --nav-border: #334155;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
 
     html, body {
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, var(--bg) 0%, #bbdefb 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(to bottom, var(--bg), color-mix(in srgb, var(--bg) 70%, #00000008));
       color: var(--text);
+      transition: background 0.4s, color 0.4s;
     }
 
     body {
       min-height: 100vh;
-      padding: 16px 16px 100px 16px;
+      padding: 24px 16px 100px;
       display: flex;
       flex-direction: column;
       padding-bottom: env(safe-area-inset-bottom, 100px);
@@ -41,23 +64,38 @@
 
     header {
       text-align: center;
-      margin: 16px 0 24px;
+      margin-bottom: 32px;
+      position: relative;
     }
 
-    h1 { font-size: 1.9rem; color: var(--primary-dark); margin-bottom: 4px; }
-    h2 { font-size: 1.5rem; margin-bottom: 16px; color: var(--primary-dark); }
+    h1 { font-size: 2.1rem; font-weight: 700; color: var(--primary-dark); }
+    .subtitle { font-size: 1rem; color: var(--gray); margin-top: 6px; }
 
-    .subtitle { font-size: 0.95rem; opacity: 0.85; }
+    .theme-toggle {
+      position: absolute;
+      top: 0; right: 0;
+      background: var(--light-gray);
+      border: none;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: var(--gray);
+      transition: all 0.3s;
+    }
+
+    .theme-toggle:hover { background: var(--primary); color: white; transform: scale(1.08); }
 
     .page {
       opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.35s ease, transform 0.35s ease;
+      transform: translateY(24px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
       pointer-events: none;
       position: absolute;
-      width: 100%;
-      left: 0; top: 0;
-      padding: 0 16px;
+      inset: 0 16px auto;
     }
 
     .page.active {
@@ -69,105 +107,173 @@
 
     .card {
       background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      border: 1px solid #e3f2fd;
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+      border: 1px solid var(--light-gray);
+      position: relative;
+      transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
     }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: color-mix(in srgb, var(--card) 92%, black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .loading-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .spinner {
+      width: 52px;
+      height: 52px;
+      border: 5px solid var(--light-gray);
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { margin-top: 16px; font-size: 0.95rem; color: var(--gray); font-weight: 500; }
 
     .info-box {
-      background: #e8f4fd;
-      border-radius: 12px;
-      padding: 14px;
-      margin: 16px 0;
-      font-size: 0.95rem;
-      line-height: 1.45;
+      background: color-mix(in srgb, var(--primary) 8%, var(--card));
+      border-radius: 16px;
+      padding: 18px;
+      margin: 20px 0;
+      border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
     }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: var(--primary-dark);
-    }
-
+    label { font-weight: 600; color: var(--primary-dark); display: block; margin-bottom: 8px; font-size: 0.95rem; }
     input {
       width: 100%;
       padding: 14px 16px;
-      border: 2px solid #bbdefb;
+      border: 1px solid var(--light-gray);
       border-radius: 12px;
       font-size: 1rem;
-      margin-bottom: 16px;
-      transition: border-color 0.2s;
+      margin-bottom: 20px;
+      transition: all 0.2s;
     }
-
     input:focus {
-      outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(66,165,245,0.2);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+      outline: none;
     }
+    input:invalid:focus { border-color: var(--failed); }
 
     .btn {
-      display: block;
       width: 100%;
       padding: 16px;
       background: var(--primary);
       color: white;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       border: none;
       border-radius: 12px;
       cursor: pointer;
-      transition: all 0.2s;
-      margin: 12px 0;
+      transition: all 0.25s;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    #qr-container { text-align: center; margin: 28px 0; display: none; }
+    #qrcode {
+      margin: 24px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      display: inline-block;
     }
 
-    .btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
-    .btn:disabled { background: #90caf9; cursor: not-allowed; }
+    #timer { font-weight: 600; color: var(--primary-dark); margin: 16px 0; font-size: 1.1rem; }
+    #expired-msg { color: var(--failed); font-weight: 600; margin: 20px 0; display: none; }
 
-    #qr-container { text-align: center; margin: 20px 0; display: none; }
-    #status { text-align: center; font-size: 1.1rem; margin: 20px 0; padding: 16px; border-radius: 12px; display: none; }
-    .success { background: #e8f5e9; color: #2e7d32; }
-
-    .info-text { font-size: 0.9rem; opacity: 0.8; text-align: center; margin-top: 20px; }
-
-    /* History */
-    .history-list {
+    .copy-group {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      background: var(--light-gray);
+      padding: 12px;
+      border-radius: 12px;
+      margin: 16px 0;
+      font-family: monospace;
+      font-size: 0.95rem;
+      word-break: break-all;
     }
+
+    .copy-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      margin-left: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover { background: var(--primary-dark); }
+
+    .history-list { display: flex; flex-direction: column; gap: 16px; }
 
     .history-item {
-      background: #f8fbff;
-      border-radius: 12px;
-      padding: 16px;
-      border-left: 4px solid var(--success);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      background: color-mix(in srgb, var(--card), #00000004);
+      border-radius: 16px;
+      padding: 18px;
+      border-left: 5px solid var(--success);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-
+    .history-item:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
     .history-item.pending { border-left-color: var(--pending); }
     .history-item.failed  { border-left-color: var(--failed); }
 
-    .history-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .history-amount { font-size: 1.1rem; color: var(--primary-dark); }
-    .history-date   { font-size: 0.85rem; opacity: 0.7; margin-bottom: 4px; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 600; }
+    .history-amount { font-size: 1.15rem; color: var(--primary-dark); }
+    .history-date { font-size: 0.9rem; color: var(--gray); margin-bottom: 6px; }
     .history-status {
+      padding: 6px 14px;
+      border-radius: 999px;
       font-size: 0.85rem;
-      padding: 4px 10px;
-      border-radius: 20px;
+      font-weight: 500;
     }
-    .history-status.completed { background: rgba(76,175,80,0.15); color: var(--success); }
-    .history-status.pending   { background: rgba(255,152,0,0.15); color: var(--pending); }
-    .history-status.failed    { background: rgba(244,67,54,0.15); color: var(--failed); }
+    .history-status.completed { background: #d1fae5; color: var(--success); }
+    .history-status.pending   { background: #fef3c7; color: var(--pending); }
+    .history-status.failed    { background: #fee2e2; color: var(--failed); }
+
+    #detail-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    #detail-content {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    #close-detail { float: right; font-size: 1.6rem; cursor: pointer; color: var(--gray); }
 
     .bottom-nav {
       position: fixed;
@@ -176,51 +282,45 @@
       border-top: 1px solid var(--nav-border);
       display: flex;
       justify-content: space-around;
-      align-items: center;
       padding: 12px 0;
-      box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+      box-shadow: 0 -8px 25px rgba(0,0,0,0.1);
       z-index: 1000;
-      min-height: 70px;
+      min-height: 80px;
       padding-bottom: env(safe-area-inset-bottom, 12px);
+      transition: background 0.4s, border-color 0.4s;
     }
 
     .nav-item {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      color: #757575;
-      font-size: 0.75rem;
+      color: var(--gray);
+      font-size: 0.8rem;
       font-weight: 500;
-      padding: 4px 12px;
-      transition: all 0.2s;
-      flex: 1;
-      text-align: center;
+      padding: 8px 0;
+      transition: all 0.25s;
       cursor: pointer;
-      user-select: none;
     }
-
-    .nav-item:hover { color: var(--primary); }
+    .nav-item:hover { color: var(--primary); transform: translateY(-3px); }
     .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 1.8rem; margin-bottom: 4px; }
 
-    .nav-icon { font-size: 1.6rem; margin-bottom: 4px; }
-    .nav-item.active .nav-icon { color: var(--primary-dark); }
-
-    .main-content {
-      position: relative;
-      flex: 1;
-      margin-bottom: 20px;
-    }
+    .main-content { position: relative; flex: 1; margin-bottom: 32px; }
 
     @media (min-width: 500px) {
-      body { max-width: 420px; margin: 0 auto; }
+      body { max-width: 480px; margin: 0 auto; }
     }
   </style>
 </head>
-<body>
+<body data-theme="light">
 
   <header>
-    <h1>Buy USDT</h1>
-    <div class="subtitle">with TRX • Best Rate • Automatic</div>
+    <h1>USDT Buy</h1>
+    <div class="subtitle">Instant • Secure • TRX Powered</div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+      <i class="fa-solid fa-moon"></i>
+    </button>
   </header>
 
   <div class="main-content">
@@ -228,53 +328,80 @@
     <!-- Home -->
     <div id="page-home" class="page">
       <div class="card">
-        <h2>Welcome!</h2>
-        <p style="margin: 16px 0;">Quick buy • Best rates • Secure TRON transfers</p>
-        <p class="info-text">(Demo version)</p>
+        <h2>Welcome</h2>
+        <p style="margin:20px 0; color:var(--gray); line-height:1.6;">
+          Buy USDT (TRC20) with TRX at the best rate.<br>
+          Minimum 1000 USDT • Fully automatic
+        </p>
+        <div class="info-box" style="text-align:center;">
+          <strong>Current rate:</strong> 1 USDT = 0.1 TRX<br>
+          <small>(demo rate – real market may differ)</small>
+        </div>
       </div>
     </div>
 
     <!-- Buy -->
     <div id="page-buy" class="page active">
       <div class="card">
+        <div class="loading-overlay" id="buyLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Preparing payment…</div>
+        </div>
+
         <div class="info-box">
           <strong>Rate:</strong> 1 USDT = 0.1 TRX<br>
-          <strong>Minimum buy:</strong> 1000 USDT<br>
-          <strong>Network:</strong> TRC20 / TRON
+          <strong>Minimum:</strong> 1000 USDT<br>
+          <strong>Network:</strong> TRC20 (USDT) / TRON
         </div>
 
         <form id="buyForm">
           <label for="amount">Amount USDT (min 1000)</label>
           <input type="number" id="amount" placeholder="1000" min="1000" step="1" required>
 
-          <label for="address">Your USDT TRC20 address</label>
-          <input type="text" id="address" placeholder="T..." required>
+          <label for="address">Your TRC20 Receiving Address</label>
+          <input type="text" id="address" placeholder="T..." required pattern="^T[1-9A-HJ-NP-Za-km-z]{33}$" title="Invalid TRON address format">
 
-          <button type="submit" class="btn" id="calculateBtn">Calculate & Pay</button>
+          <button type="submit" class="btn" id="calculateBtn">Calculate & Proceed</button>
         </form>
 
         <div id="qr-container">
-          <p><strong>Send exactly:</strong> <span id="trxAmount">...</span> TRX</p>
-          <p>to address:</p>
-          <div id="addressDisplay" style="font-family:monospace; word-break:break-all; margin:12px 0; font-size:0.95rem;"></div>
+          <p id="waiting-msg"><strong>Waiting for your TRX payment…</strong></p>
           <div id="qrcode"></div>
-          <button class="btn" id="payBtn">I've Paid – Get USDT</button>
+
+          <div id="timer">
+            Expires in: <span id="countdown">15:00</span>
+          </div>
+          <div id="expired-msg">Payment window has expired. Please start again.</div>
+
+          <div class="copy-group" id="paymentInfo">
+            <span id="addressDisplay"></span>
+            <button class="copy-btn" onclick="copyToClipboard('addressDisplay')">Copy address</button>
+          </div>
+
+          <p style="margin:16px 0;">
+            Send exactly <strong><span id="trxAmount">--</span> TRX</strong>
+            <button class="copy-btn" onclick="copyPaymentString()">Copy full amount</button>
+          </p>
+
+          <button class="btn" id="payBtn">I've Paid – Confirm</button>
         </div>
 
-        <div id="status"></div>
+        <div id="status" style="margin-top:24px;"></div>
       </div>
-      <div class="info-text">Demo – real version needs backend</div>
     </div>
 
     <!-- History -->
     <div id="page-history" class="page">
       <div class="card">
-        <h2>Transaction History</h2>
-        <div id="historyList" class="history-list">
-          <!-- Filled dynamically by JS -->
+        <div class="loading-overlay" id="historyLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Loading transactions…</div>
         </div>
-        <p style="text-align:center; margin-top:24px; opacity:0.7; font-size:0.9rem;">
-          Recent transactions
+
+        <h2>Transaction History</h2>
+        <div id="historyList" class="history-list"></div>
+        <p id="historyInfo" style="text-align:center; margin-top:28px; color:var(--gray); font-size:0.95rem;">
+          Loading…
         </p>
       </div>
     </div>
@@ -283,200 +410,254 @@
     <div id="page-wallet" class="page">
       <div class="card">
         <h2>Your Wallet</h2>
-        <p style="margin:16px 0; text-align:center; opacity:0.7;">
-          No wallet connected<br>Balance: 0 TRX / 0 USDT
+        <p style="text-align:center; margin:48px 0; color:var(--gray); line-height:1.6;">
+          No wallet connected yet<br>
+          Balance: <strong>0 TRX</strong> / <strong>0 USDT</strong>
         </p>
-        <button class="btn">Connect Wallet (Coming Soon)</button>
+        <button class="btn">Connect TRON Wallet</button>
+        <p style="text-align:center; margin-top:24px; font-size:0.9rem; color:var(--gray);">
+          (Feature coming soon)
+        </p>
       </div>
     </div>
 
   </div>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Navigation -->
   <nav class="bottom-nav">
-    <div class="nav-item" data-page="home">
-      <i class="nav-icon fa-solid fa-house"></i>
-      <span>Home</span>
-    </div>
-    <div class="nav-item active" data-page="buy">
-      <i class="nav-icon fa-solid fa-cart-shopping"></i>
-      <span>Buy</span>
-    </div>
-    <div class="nav-item" data-page="history">
-      <i class="nav-icon fa-solid fa-clock-rotate-left"></i>
-      <span>History</span>
-    </div>
-    <div class="nav-item" data-page="wallet">
-      <i class="nav-icon fa-solid fa-wallet"></i>
-      <span>Wallet</span>
-    </div>
+    <div class="nav-item" data-page="home"><i class="fa-solid fa-house nav-icon"></i><span>Home</span></div>
+    <div class="nav-item active" data-page="buy"><i class="fa-solid fa-cart-shopping nav-icon"></i><span>Buy</span></div>
+    <div class="nav-item" data-page="history"><i class="fa-solid fa-clock-rotate-left nav-icon"></i><span>History</span></div>
+    <div class="nav-item" data-page="wallet"><i class="fa-solid fa-wallet nav-icon"></i><span>Wallet</span></div>
   </nav>
 
-  <!-- QR Code lib -->
+  <!-- Transaction Detail Modal -->
+  <div id="detail-modal">
+    <div id="detail-content">
+      <i id="close-detail" class="fa-solid fa-times"></i>
+      <h2>Transaction Details</h2>
+      <div id="detail-body" style="margin-top:24px; line-height:1.7;"></div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
-    // ──────────────────────────────────────────────
-    // Dynamic fake history
-    // ──────────────────────────────────────────────
-    let fakeTransactions = null;
+    // ─── Helpers ───────────────────────────────────────────
+    const $ = id => document.getElementById(id);
 
-    function generateFakeTransactions(count = 8) {
-      if (fakeTransactions) return fakeTransactions;
-
-      const transactions = [];
-      const now = new Date();
-      const statuses = ['Completed', 'Completed', 'Completed', 'Pending', 'Failed'];
-      const commonAmounts = [500, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
-
-      for (let i = 0; i < count; i++) {
-        const daysAgo = Math.floor(Math.random() * 150) + 1;
-        const txDate = new Date(now);
-        txDate.setDate(now.getDate() - daysAgo);
-        txDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
-
-        const usdt = commonAmounts[Math.floor(Math.random() * commonAmounts.length)];
-        const fee = Math.random() * 9 + 3; // 3–12 TRX extra
-        const trx = Math.round((usdt * 0.1 + fee) * 10) / 10;
-
-        const status = statuses[Math.floor(Math.random() * statuses.length)];
-
-        transactions.push({
-          date: txDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
-                ' • ' + txDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-          usdt,
-          trx,
-          status
-        });
-      }
-
-      // Sort newest first
-      transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-      fakeTransactions = transactions;
-      return transactions;
+    function copyToClipboard(id) {
+      const text = $(id).textContent;
+      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
     }
 
-    function renderHistory() {
-      const container = document.getElementById('historyList');
-      if (!container) return;
+    function copyPaymentString() {
+      const amt = $('trxAmount').textContent;
+      const addr = $('addressDisplay').textContent;
+      const str = `${amt} TRX to ${addr}`;
+      navigator.clipboard.writeText(str).then(() => alert('Full payment info copied!'));
+    }
 
-      container.innerHTML = ''; // clear
+    function showLoading(id, show = true) {
+      $(id).classList.toggle('active', show);
+    }
 
-      const txs = generateFakeTransactions(8);
+    // ─── Theme Toggle ──────────────────────────────────────
+    const themeToggle = $('themeToggle');
+    const body = document.body;
 
-      if (txs.length === 0) {
-        container.innerHTML = '<p style="text-align:center; opacity:0.7;">No transactions yet</p>';
-        return;
-      }
+    themeToggle.addEventListener('click', () => {
+      const current = body.dataset.theme;
+      body.dataset.theme = current === 'dark' ? 'light' : 'dark';
+      themeToggle.innerHTML = `<i class="fa-solid fa-${current === 'dark' ? 'moon' : 'sun'}"></i>`;
+    });
 
-      txs.forEach(tx => {
-        const item = document.createElement('div');
-        item.className = `history-item ${tx.status.toLowerCase()}`;
+    // ─── Navigation ────────────────────────────────────────
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
 
-        item.innerHTML = `
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        $(`page-${item.dataset.page}`).classList.add('active');
+
+        if (item.dataset.page === 'history') loadHistory();
+      });
+    });
+
+    // ─── History ───────────────────────────────────────────
+    function loadHistory(force = false) {
+      showLoading('historyLoading', true);
+      $('historyList').innerHTML = '';
+      $('historyInfo').textContent = 'Updating…';
+
+      setTimeout(() => {
+        const txs = generateFakeTransactions(9);
+        renderHistory(txs);
+        showLoading('historyLoading', false);
+      }, force ? 800 : 1400);
+    }
+
+    function generateFakeTransactions(count) {
+      const now = Date.now();
+      const amounts = [600,900,1000,1200,1500,1800,2200,2800,3500,4200,5000];
+      const statuses = ['Completed','Completed','Completed','Pending','Failed'];
+
+      return Array.from({length: count}, () => {
+        const minutesAgo = Math.random() * 60*24*5 + 30; // up to ~5 days
+        const date = new Date(now - minutesAgo*60000);
+        const usdt = amounts[Math.floor(Math.random()*amounts.length)];
+        return {
+          date: date.toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}),
+          usdt,
+          trx: (usdt * 0.1 + Math.random()*10 + 4).toFixed(1),
+          status: statuses[Math.floor(Math.random()*statuses.length)],
+          txid: 'T' + Math.random().toString(36).slice(2,15).toUpperCase()
+        };
+      }).sort((a,b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function renderHistory(txs) {
+      const container = $('historyList');
+      container.innerHTML = txs.map(tx => `
+        <div class="history-item ${tx.status.toLowerCase()}" data-txid="${tx.txid}" data-usdt="${tx.usdt}" data-trx="${tx.trx}" data-date="${tx.date}" data-status="${tx.status}">
           <div class="history-header">
-            <span class="history-amount">+${tx.usdt.toLocaleString()} USDT</span>
+            <span class="history-amount">+${tx.usdt} USDT</span>
             <span class="history-status ${tx.status.toLowerCase()}">${tx.status}</span>
           </div>
           <div class="history-date">${tx.date}</div>
-          <div>Paid: ${tx.trx} TRX (incl. fees)</div>
-        `;
+          <div style="margin-top:6px;">Paid: ${tx.trx} TRX</div>
+        </div>
+      `).join('');
 
-        container.appendChild(item);
+      $('historyInfo').textContent = `Last update • ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+
+      // Add click listeners for details
+      document.querySelectorAll('.history-item').forEach(el => {
+        el.addEventListener('click', showTxDetail);
       });
     }
 
-    // ──────────────────────────────────────────────
-    // Navigation
-    // ──────────────────────────────────────────────
-    const navItems = document.querySelectorAll('.nav-item');
-    const pages = document.querySelectorAll('.page');
+    function showTxDetail(e) {
+      const el = e.currentTarget;
+      const data = el.dataset;
 
-    function switchPage(pageId) {
-      pages.forEach(p => p.classList.remove('active'));
-      const target = document.getElementById(`page-${pageId}`);
-      if (target) {
-        target.classList.add('active');
-        if (pageId === 'history') {
-          renderHistory(); // generate/render when tab is opened
-        }
-      }
-    }
+      $('detail-body').innerHTML = `
+        <div style="margin-bottom:20px;">
+          <strong style="display:block; font-size:1.3rem; color:var(--primary-dark);">
+            ${data.usdt} USDT
+          </strong>
+          <div style="color:var(--gray); margin-top:4px;">${data.date}</div>
+        </div>
 
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        navItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        const pageId = item.getAttribute('data-page');
-        switchPage(pageId);
-      });
-    });
-
-    // ──────────────────────────────────────────────
-    // Buy form logic (unchanged)
-    // ──────────────────────────────────────────────
-    const form = document.getElementById('buyForm');
-    const calculateBtn = document.getElementById('calculateBtn');
-    const qrContainer = document.getElementById('qr-container');
-    const statusDiv = document.getElementById('status');
-    const payBtn = document.getElementById('payBtn');
-    const amountInput = document.getElementById('amount');
-    const addressInput = document.getElementById('address');
-
-    const SYSTEM_TRX_ADDRESS = "THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC";
-
-    let currentTrxNeeded = 0;
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const amount = parseInt(amountInput.value);
-      if (isNaN(amount) || amount < 1000) {
-        alert("Minimum amount is 1000 USDT");
-        return;
-      }
-      const trxRate = 0.1;
-      const feeBuffer = 5;
-      currentTrxNeeded = (amount * trxRate) + feeBuffer;
-      document.getElementById('trxAmount').textContent = currentTrxNeeded.toFixed(1);
-      document.getElementById('addressDisplay').textContent = SYSTEM_TRX_ADDRESS;
-      document.getElementById('qrcode').innerHTML = "";
-      new QRCode(document.getElementById('qrcode'), {
-        text: `tron:${SYSTEM_TRX_ADDRESS}?amount=${currentTrxNeeded.toFixed(1)}`,
-        width: 220,
-        height: 220,
-        colorDark: "#0d47a1",
-        colorLight: "#ffffff"
-      });
-      qrContainer.style.display = 'block';
-      calculateBtn.disabled = true;
-      calculateBtn.textContent = "Edit Amount";
-    });
-
-    payBtn.addEventListener('click', () => {
-      if (!addressInput.value.trim()) {
-        alert("Please enter your USDT address first");
-        return;
-      }
-      statusDiv.style.display = 'block';
-      statusDiv.className = 'success';
-      statusDiv.innerHTML = `
-        <strong>Payment received!</strong><br>
-        Sending ${amountInput.value} USDT (TRC20) to your address...<br><br>
-        (Demo — backend needed in real version)
+        <div style="display:grid; gap:16px; font-size:0.98rem;">
+          <div><strong>Status:</strong> <span style="color:${data.status==='Completed'?'var(--success)':data.status==='Pending'?'var(--pending)':'var(--failed)'};">${data.status}</span></div>
+          <div><strong>TRX Paid:</strong> ${data.trx}</div>
+          <div><strong>Transaction ID:</strong><br><code style="background:var(--light-gray); padding:4px 8px; border-radius:6px;">${data.txid}</code></div>
+          <div><strong>To Address:</strong><br><code style="word-break:break-all;">THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC</code></div>
+        </div>
       `;
-      payBtn.disabled = true;
-      payBtn.textContent = "Processing...";
+
+      $('detail-modal').style.display = 'flex';
+    }
+
+    $('close-detail').addEventListener('click', () => {
+      $('detail-modal').style.display = 'none';
     });
 
-    calculateBtn.addEventListener('click', () => {
-      if (calculateBtn.textContent === "Edit Amount") {
-        qrContainer.style.display = 'none';
-        statusDiv.style.display = 'none';
-        calculateBtn.disabled = false;
-        calculateBtn.textContent = "Calculate & Pay";
+    $('detail-modal').addEventListener('click', e => {
+      if (e.target === $('detail-modal')) $('detail-modal').style.display = 'none';
+    });
+
+    // Auto-refresh history every 5 minutes
+    setInterval(() => {
+      if ($('page-history').classList.contains('active')) {
+        loadHistory(true);
       }
-    });
-  </script>
+    }, 300000);
 
+    // ─── Buy Logic ─────────────────────────────────────────
+    let countdownTimer;
+
+    $('buyForm').addEventListener('submit', e => {
+      e.preventDefault();
+      showLoading('buyLoading', true);
+
+      setTimeout(() => {
+        showLoading('buyLoading', false);
+
+        const amount = Number($('amount').value);
+        if (amount < 1000 || isNaN(amount)) {
+          alert("Minimum amount is 1000 USDT");
+          return;
+        }
+
+        const trx = (amount * 0.1 + 5).toFixed(1);
+        $('trxAmount').textContent = trx;
+        $('addressDisplay').textContent = "THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC";
+
+        $('qrcode').innerHTML = '';
+        new QRCode($('qrcode'), {
+          text: `tron:THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC?amount=${trx}`,
+          width: 240,
+          height: 240,
+          colorDark: "#1d4ed8",
+          colorLight: "#ffffff"
+        });
+
+        $('qr-container').style.display = 'block';
+        $('calculateBtn').disabled = true;
+        $('calculateBtn').textContent = "Edit Amount";
+
+        // 15-minute timer
+        let timeLeft = 15 * 60;
+        $('countdown').textContent = "15:00";
+        $('expired-msg').style.display = 'none';
+
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          timeLeft--;
+          const m = Math.floor(timeLeft / 60).toString().padStart(2,'0');
+          const s = (timeLeft % 60).toString().padStart(2,'0');
+          $('countdown').textContent = `${m}:${s}`;
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            $('expired-msg').style.display = 'block';
+            $('qr-container').style.display = 'none';
+            $('calculateBtn').disabled = false;
+            $('calculateBtn').textContent = "Calculate & Proceed";
+          }
+        }, 1000);
+      }, 1400);
+    });
+
+    $('payBtn').addEventListener('click', () => {
+      clearInterval(countdownTimer);
+      $('status').innerHTML = `
+        <div style="padding:28px; background:#ecfdf5; border-radius:16px; text-align:center;">
+          <div class="spinner" style="margin:0 auto 20px; width:48px; height:48px; border-width:5px;"></div>
+          <strong style="display:block; font-size:1.3rem; margin-bottom:12px;">Processing payment…</strong>
+          <div style="color:var(--gray);">This is a demo version</div>
+        </div>
+      `;
+      $('status').style.display = 'block';
+      $('payBtn').disabled = true;
+      $('payBtn').textContent = "Confirming…";
+
+      setTimeout(() => {
+        $('status').innerHTML = `
+          <div style="padding:28px; background:#ecfdf5; border-radius:16px; text-align:center; color:var(--success);">
+            <i class="fa-solid fa-check-circle" style="font-size:3.2rem; margin-bottom:16px;"></i>
+            <strong style="display:block; font-size:1.4rem;">Success!</strong>
+            <div style="margin-top:12px;">${$('amount').value} USDT sent to your address</div>
+          </div>
+        `;
+      }, 2800);
+    });
+
+    // Initial load
+    loadHistory();
+  </script>
 </body>
 </html>
