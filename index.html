@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Buy USDT • TRX</title>
+
+  <!-- Font Awesome 6 Free CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    :root {
+      --bg: #e3f2fd;
+      --primary: #42a5f5;
+      --primary-dark: #1976d2;
+      --text: #0d47a1;
+      --card: #ffffff;
+      --success: #4caf50;
+      --pending: #ff9800;
+      --failed: #f44336;
+      --nav-bg: #ffffff;
+      --nav-border: #bbdefb;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, #bbdefb 100%);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 16px 16px 100px 16px;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom, 100px);
+    }
+
+    header {
+      text-align: center;
+      margin: 16px 0 24px;
+    }
+
+    h1 { font-size: 1.9rem; color: var(--primary-dark); margin-bottom: 4px; }
+    h2 { font-size: 1.5rem; margin-bottom: 16px; color: var(--primary-dark); }
+
+    .subtitle { font-size: 0.95rem; opacity: 0.85; }
+
+    .page {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+      left: 0; top: 0;
+      padding: 0 16px;
+    }
+
+    .page.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      position: relative;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid #e3f2fd;
+    }
+
+    .info-box {
+      background: #e8f4fd;
+      border-radius: 12px;
+      padding: 14px;
+      margin: 16px 0;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #bbdefb;
+      border-radius: 12px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(66,165,245,0.2);
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 12px 0;
+    }
+
+    .btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn:disabled { background: #90caf9; cursor: not-allowed; }
+
+    #qr-container { text-align: center; margin: 20px 0; display: none; }
+    #status { text-align: center; font-size: 1.1rem; margin: 20px 0; padding: 16px; border-radius: 12px; display: none; }
+    .success { background: #e8f5e9; color: #2e7d32; }
+
+    .info-text { font-size: 0.9rem; opacity: 0.8; text-align: center; margin-top: 20px; }
+
+    /* History */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-item {
+      background: #f8fbff;
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 4px solid var(--success);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .history-item.pending { border-left-color: var(--pending); }
+    .history-item.failed  { border-left-color: var(--failed); }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .history-amount { font-size: 1.1rem; color: var(--primary-dark); }
+    .history-date   { font-size: 0.85rem; opacity: 0.7; margin-bottom: 4px; }
+    .history-status {
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .history-status.completed { background: rgba(76,175,80,0.15); color: var(--success); }
+    .history-status.pending   { background: rgba(255,152,0,0.15); color: var(--pending); }
+    .history-status.failed    { background: rgba(244,67,54,0.15); color: var(--failed); }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--nav-bg);
+      border-top: 1px solid var(--nav-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 0;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+      z-index: 1000;
+      min-height: 70px;
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #757575;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 12px;
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav-item:hover { color: var(--primary); }
+    .nav-item.active { color: var(--primary); }
+
+    .nav-icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .nav-item.active .nav-icon { color: var(--primary-dark); }
+
+    .main-content {
+      position: relative;
+      flex: 1;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 500px) {
+      body { max-width: 420px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Buy USDT</h1>
+    <div class="subtitle">with TRX • Best Rate • Automatic</div>
+  </header>
+
+  <div class="main-content">
+
+    <!-- Home -->
+    <div id="page-home" class="page">
+      <div class="card">
+        <h2>Welcome!</h2>
+        <p style="margin: 16px 0;">Quick buy • Best rates • Secure TRON transfers</p>
+        <p class="info-text">(Demo version)</p>
+      </div>
+    </div>
+
+    <!-- Buy -->
+    <div id="page-buy" class="page active">
+      <div class="card">
+        <div class="info-box">
+          <strong>Rate:</strong> 1 USDT = 0.1 TRX<br>
+          <strong>Minimum buy:</strong> 1000 USDT<br>
+          <strong>Network:</strong> TRC20 / TRON
+        </div>
+
+        <form id="buyForm">
+          <label for="amount">Amount USDT (min 1000)</label>
+          <input type="number" id="amount" placeholder="1000" min="1000" step="1" required>
+
+          <label for="address">Your USDT TRC20 address</label>
+          <input type="text" id="address" placeholder="T..." required>
+
+          <button type="submit" class="btn" id="calculateBtn">Calculate & Pay</button>
+        </form>
+
+        <div id="qr-container">
+          <p><strong>Send exactly:</strong> <span id="trxAmount">...</span> TRX</p>
+          <p>to address:</p>
+          <div id="addressDisplay" style="font-family:monospace; word-break:break-all; margin:12px 0; font-size:0.95rem;"></div>
+          <div id="qrcode"></div>
+          <button class="btn" id="payBtn">I've Paid – Get USDT</button>
+        </div>
+
+        <div id="status"></div>
+      </div>
+      <div class="info-text">Demo – real version needs backend</div>
+    </div>
+
+    <!-- History -->
+    <div id="page-history" class="page">
+      <div class="card">
+        <h2>Transaction History</h2>
+        <div id="historyList" class="history-list">
+          <!-- Filled dynamically by JS -->
+        </div>
+        <p style="text-align:center; margin-top:24px; opacity:0.7; font-size:0.9rem;">
+          Recent transactions
+        </p>
+      </div>
+    </div>
+
+    <!-- Wallet -->
+    <div id="page-wallet" class="page">
+      <div class="card">
+        <h2>Your Wallet</h2>
+        <p style="margin:16px 0; text-align:center; opacity:0.7;">
+          No wallet connected<br>Balance: 0 TRX / 0 USDT
+        </p>
+        <button class="btn">Connect Wallet (Coming Soon)</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="nav-item" data-page="home">
+      <i class="nav-icon fa-solid fa-house"></i>
+      <span>Home</span>
+    </div>
+    <div class="nav-item active" data-page="buy">
+      <i class="nav-icon fa-solid fa-cart-shopping"></i>
+      <span>Buy</span>
+    </div>
+    <div class="nav-item" data-page="history">
+      <i class="nav-icon fa-solid fa-clock-rotate-left"></i>
+      <span>History</span>
+    </div>
+    <div class="nav-item" data-page="wallet">
+      <i class="nav-icon fa-solid fa-wallet"></i>
+      <span>Wallet</span>
+    </div>
+  </nav>
+
+  <!-- QR Code lib -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    // ──────────────────────────────────────────────
+    // Dynamic fake history
+    // ──────────────────────────────────────────────
+    let fakeTransactions = null;
+
+    function generateFakeTransactions(count = 8) {
+      if (fakeTransactions) return fakeTransactions;
+
+      const transactions = [];
+      const now = new Date();
+      const statuses = ['Completed', 'Completed', 'Completed', 'Pending', 'Failed'];
+      const commonAmounts = [500, 800, 1000, 1200, 1500, 2000, 2500, 3000, 4000, 5000];
+
+      for (let i = 0; i < count; i++) {
+        const daysAgo = Math.floor(Math.random() * 150) + 1;
+        const txDate = new Date(now);
+        txDate.setDate(now.getDate() - daysAgo);
+        txDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
+
+        const usdt = commonAmounts[Math.floor(Math.random() * commonAmounts.length)];
+        const fee = Math.random() * 9 + 3; // 3–12 TRX extra
+        const trx = Math.round((usdt * 0.1 + fee) * 10) / 10;
+
+        const status = statuses[Math.floor(Math.random() * statuses.length)];
+
+        transactions.push({
+          date: txDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                ' • ' + txDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+          usdt,
+          trx,
+          status
+        });
+      }
+
+      // Sort newest first
+      transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+      fakeTransactions = transactions;
+      return transactions;
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      if (!container) return;
+
+      container.innerHTML = ''; // clear
+
+      const txs = generateFakeTransactions(8);
+
+      if (txs.length === 0) {
+        container.innerHTML = '<p style="text-align:center; opacity:0.7;">No transactions yet</p>';
+        return;
+      }
+
+      txs.forEach(tx => {
+        const item = document.createElement('div');
+        item.className = `history-item ${tx.status.toLowerCase()}`;
+
+        item.innerHTML = `
+          <div class="history-header">
+            <span class="history-amount">+${tx.usdt.toLocaleString()} USDT</span>
+            <span class="history-status ${tx.status.toLowerCase()}">${tx.status}</span>
+          </div>
+          <div class="history-date">${tx.date}</div>
+          <div>Paid: ${tx.trx} TRX (incl. fees)</div>
+        `;
+
+        container.appendChild(item);
+      });
+    }
+
+    // ──────────────────────────────────────────────
+    // Navigation
+    // ──────────────────────────────────────────────
+    const navItems = document.querySelectorAll('.nav-item');
+    const pages = document.querySelectorAll('.page');
+
+    function switchPage(pageId) {
+      pages.forEach(p => p.classList.remove('active'));
+      const target = document.getElementById(`page-${pageId}`);
+      if (target) {
+        target.classList.add('active');
+        if (pageId === 'history') {
+          renderHistory(); // generate/render when tab is opened
+        }
+      }
+    }
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const pageId = item.getAttribute('data-page');
+        switchPage(pageId);
+      });
+    });
+
+    // ──────────────────────────────────────────────
+    // Buy form logic (unchanged)
+    // ──────────────────────────────────────────────
+    const form = document.getElementById('buyForm');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const qrContainer = document.getElementById('qr-container');
+    const statusDiv = document.getElementById('status');
+    const payBtn = document.getElementById('payBtn');
+    const amountInput = document.getElementById('amount');
+    const addressInput = document.getElementById('address');
+
+    const SYSTEM_TRX_ADDRESS = "THWkXXsmZQJYB3XpbQC7xioFfDaurj1wnC";
+
+    let currentTrxNeeded = 0;
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const amount = parseInt(amountInput.value);
+      if (isNaN(amount) || amount < 1000) {
+        alert("Minimum amount is 1000 USDT");
+        return;
+      }
+      const trxRate = 0.1;
+      const feeBuffer = 5;
+      currentTrxNeeded = (amount * trxRate) + feeBuffer;
+      document.getElementById('trxAmount').textContent = currentTrxNeeded.toFixed(1);
+      document.getElementById('addressDisplay').textContent = SYSTEM_TRX_ADDRESS;
+      document.getElementById('qrcode').innerHTML = "";
+      new QRCode(document.getElementById('qrcode'), {
+        text: `tron:${SYSTEM_TRX_ADDRESS}?amount=${currentTrxNeeded.toFixed(1)}`,
+        width: 220,
+        height: 220,
+        colorDark: "#0d47a1",
+        colorLight: "#ffffff"
+      });
+      qrContainer.style.display = 'block';
+      calculateBtn.disabled = true;
+      calculateBtn.textContent = "Edit Amount";
+    });
+
+    payBtn.addEventListener('click', () => {
+      if (!addressInput.value.trim()) {
+        alert("Please enter your USDT address first");
+        return;
+      }
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'success';
+      statusDiv.innerHTML = `
+        <strong>Payment received!</strong><br>
+        Sending ${amountInput.value} USDT (TRC20) to your address...<br><br>
+        (Demo — backend needed in real version)
+      `;
+      payBtn.disabled = true;
+      payBtn.textContent = "Processing...";
+    });
+
+    calculateBtn.addEventListener('click', () => {
+      if (calculateBtn.textContent === "Edit Amount") {
+        qrContainer.style.display = 'none';
+        statusDiv.style.display = 'none';
+        calculateBtn.disabled = false;
+        calculateBtn.textContent = "Calculate & Pay";
+      }
+    });
+  </script>
+
+</body>
+</html>
